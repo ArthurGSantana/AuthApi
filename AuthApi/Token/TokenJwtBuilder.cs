@@ -1,4 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthApi;
 
@@ -45,5 +47,49 @@ public class TokenJwtBuilder
     {
         claims.Add(type, value);
         return this;
+    }
+
+    private void EnsureArguments()
+    {
+        if (_securityKey == null)
+        {
+            throw new ArgumentNullException(nameof(_securityKey));
+        }
+
+        if (string.IsNullOrEmpty(_subject))
+        {
+            throw new ArgumentNullException(nameof(_subject));
+        }
+
+        if (string.IsNullOrEmpty(_issuer))
+        {
+            throw new ArgumentNullException(nameof(_issuer));
+        }
+
+        if (string.IsNullOrEmpty(_audience))
+        {
+            throw new ArgumentNullException(nameof(_audience));
+        }
+    }
+
+    public TokenJwt Build()
+    {
+        EnsureArguments();
+
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, _subject!),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        }.Union(this.claims.Select(c => new Claim(c.Key, c.Value)));
+
+        var token = new JwtSecurityToken(
+            _issuer,
+            _audience,
+            claims,
+            expires: DateTime.UtcNow.AddMinutes(_expiresInMinutes),
+            signingCredentials: new SigningCredentials(_securityKey, SecurityAlgorithms.Aes128CbcHmacSha256)
+        );
+
+        return new TokenJwt(token);
     }
 }
