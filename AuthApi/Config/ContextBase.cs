@@ -27,6 +27,6 @@ public class ContextBase : IdentityDbContext<ApplicationUser>
 
     public string getConnectionString()
     {
-        return "Server=localhos;SSLMode=Prefer;Port=5432;Database=AuthApi;Username=postgres;Password=postgres;";
+        return "Server=localhost;SSLMode=Prefer;Port=5432;Database=auth-identity;Username=postgres;Password=password;";
     }
 }
